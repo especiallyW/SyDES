@@ -1,0 +1,69 @@
+# Model architecture configuration
+model:
+  image_encoder_path: "checkpoints/clip-vit-base-patch16"  # Path to CLIP vision encoder weights
+  text_encoder_path: "checkpoints/clip-vit-base-patch16"  # Path to CLIP text encoder weights
+  text_decoder:
+    layers: 12  # Number of transformer layers
+    nhead: 12  # Number of attention heads per layer
+    embed_dim: 768  # Token embedding dimension
+    mlp_ratio: 4.0  # MLP expansion ratio
+    context_length: 76  # Maximum sequence length
+    output_dim: 512  # Output dimension
+  image_decoder:
+    layers: 8  # Number of transformer layers
+    nhead: 8  # Number of attention heads per layer
+    embed_dim: 512  # Patch embedding dimension
+    mask_ratio: 0.00  # Ratio of patches to mask (0=no masking)
+    mlp_ratio: 4.0  # MLP expansion ratio
+  latent_dim: 512  # Shared latent space dimension
+  num_labels: 3  # Number of output classes
+  freeze_text_encoder: false  # Freeze text encoder parameters
+  freeze_text_decoder: false  # Freeze text decoder parameters
+  freeze_image_encoder: true  # Freeze image encoder parameters
+  freeze_image_decoder: true  # Freeze image decoder parameters
+  freeze_aggregator: true  # Freeze aggregator parameters
+
+# Dataset configuration
+data:
+  data_name: "MSED"  # Dataset identifier
+  root_path: "playground/data/MSED"  # Root directory path
+  label_type: "sentiment"  # Type of labels
+
+# Training configuration
+training:
+  stage: "finetune"  # Training stage: finetune
+  loss_weight:
+    itc: 0.40  # Image-text contrastive loss weight
+    cs: 0.00  # Consistency loss weight (MSE)
+    cf: 0.00  # Contrastive feature loss weight (KL divergence)
+    recon: 0  # Reconstruction loss weight (MAE)
+    cls: 1.0  # Classification loss weight
+    mdse: 0.00  # Multi-task desire loss weight
+  batch_size: 32  # Training batch size
+  eval_batch_size: 64  # Evaluation batch size
+  eval_strategy: "steps"  # Evaluation strategy: steps or epoch
+  eval_steps: 96  # Evaluate every N steps
+  save_strategy: "steps"  # Checkpoint saving strategy
+  save_steps: 96  # Save checkpoint every N steps
+  save_total_limit: 5  # Maximum checkpoints to keep
+  logging_strategy: "steps"  # Logging strategy
+  logging_steps: 50  # Log metrics every N steps
+  load_best_model_at_end: true  # Load best model at end
+  metric_for_best_model: "eval_f1_macro"  # Metric for model selection
+  greater_is_better: true  # Higher metric is better
+  output_dir: "output/mask_075_recon_t_itc_t_cs_t_cf_t/finetune_sentiment_textencoder_true_imgencoder_false/files"  # Output directory
+  logging_dir: "output/mask_075_recon_t_itc_t_cs_t_cf_t/finetune_sentiment_textencoder_true_imgencoder_false/logs"  # Logging directory
+  result_dir: "output/mask_075_recon_t_itc_t_cs_t_cf_t/finetune_sentiment_textencoder_true_imgencoder_false/results"  # Results directory
+  max_grad_norm: 1.0  # Gradient clipping norm
+  num_epochs: 50  # Total training epochs
+  learning_rate_map:
+    image_encoder: 5e-5  # Image encoder learning rate
+    text_decoder: 2e-4  # Text decoder learning rate
+    proj1: 1e-4  # Projection layer 1 learning rate
+    proj2: 1e-4  # Projection layer 2 learning rate
+    others: 1e-4  # Other components learning rate
+  fp16: true  # Enable mixed-precision training
+  warmup_ratio: 0.10  # Learning rate warmup ratio
+  weight_decay: 0.01  # Weight decay coefficient
+  gradient_accumulation: 2  # Gradient accumulation steps
+  seed: 42  # Random seed for reproducibility
